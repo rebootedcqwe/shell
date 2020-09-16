@@ -134,3 +134,4 @@ G
 H
 I
 rm -f *.txt
+init 6
