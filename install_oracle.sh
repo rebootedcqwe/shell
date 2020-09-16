@@ -69,7 +69,7 @@ bb=`cat 4.txt`
 echo "scale=0;$bb/4096"|bc > 5.txt
 cc=`cat 5.txt`
 echo $bb $cc
-cat > /etc/sysctl.d/97-oracledatabase-sysctl.conf  <<EOF
+cat << EOF >> /etc/sysctl.conf
 fs.aio-max-nr = 1048576
 fs.file-max = 6815744
 kernel.shmall = xv         
@@ -82,11 +82,13 @@ net.core.rmem_max = 4194304
 net.core.wmem_default = 262144 
 net.core.wmem_max = 1048576
 EOF
-sed -i "s#xx#$bb#g" /etc/sysctl.d/97-oracledatabase-sysctl.conf
-sed -i "s#xv#$cc#g" /etc/sysctl.d/97-oracledatabase-sysctl.conf
+awk ' !x[$0]++' /etc/sysctl.conf > /etc/sysctl.conf.bak
+\cp /etc/sysctl.conf.bak  /etc/sysctl.conf
+
+sed -i "s#xx#$bb#g" /etc/sysctl.conf
+sed -i "s#xv#$cc#g" /etc/sysctl.conf
 sysctl --system
-sysctl -a|grep shmmax 
-sysctl -a|grep shmall
+sysctl -p
 
 cat << EOF >> /etc/security/limits.conf
 oracle soft nproc 2047
@@ -122,7 +124,7 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 }
 I()
 {
-  yum install -y compat-libcap*  ksh    libaio-devel*   xdpyinfo
+  yum install -y    compat-libstdc*  compat-libcap*  ksh    libaio-devel*   xdpyinfo
 }
 A
 B
