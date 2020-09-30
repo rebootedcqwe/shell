@@ -7,6 +7,24 @@ if [ `whoami` != "root" ];then
 else
  echo "root is ok"
 fi
+
+ping www.baidu.com -c 3
+ao=`echo $?`
+if [ $ao == "0" ];then
+ echo "ping ok"
+else
+ echo "ping no"
+  exit 0
+fi
+
+yh=`cat /etc/sysconfig/network-scripts/ifcfg-ens33  | grep BOOTPROTO | cut -d= -f 2|awk -F '["]+' '{print $2}'`
+if [ $yh == "dhcp" ];then
+ echo "ip no,please set static ip"
+  exit 0
+else
+ echo "ip yes"
+fi
+
 b=`cat /etc/redhat-release |awk 'NR==1' |  awk -F '[ ]+' '{print $4}'| cut -d . -f 1`
 if [ $b != "7" ];then
  echo "centos7.X is no"
@@ -28,26 +46,17 @@ setenforce 0
 
 C()
 {
-free -h | awk 'NR==2' | awk '{print $2}' > 1.txt
+gg=`free -h | awk 'NR==2' | awk '{print $2}'| cut -dG -f 1`
+echo "scale=0;$gg*0.8"|bc > 1.txt
 awk '{print int($1+0.5)}' 1.txt > 2.txt
-sed -i 's/$/&G/' 2.txt
+sed -i 's/$/&g/' 2.txt
 aq=`cat 2.txt`      
 cat << EOF >> /etc/fstab 
 tmpfs                    /dev/shm               tmpfs        defaults,size=$aq        0 0
 EOF
-
 awk ' !x[$0]++' /etc/fstab > /etc/fstab.bak
 \cp /etc/fstab.bak /etc/fstab
-
 mount -o remount /dev/shm
-as=`df -h /dev/shm/ | awk 'NR==2' | awk '{print $2}' |cut -d. -f 1`
-ax=`cat 2.txt | cut -d G  -f 1`
-if [ $ax != $as ];then
- echo " no"
- exit 0
-else
- echo "ok"
-fi
 }
 
 D()
@@ -63,7 +72,8 @@ sleep 0.1
 E()
 {
 aa=`cat /proc/meminfo | grep MemTotal |awk -F '[:]+' '{print $2}'|cut -d " "  -f 9`
-echo "scale=0;$aa*1024*0.9"|bc > 3.txt
+#echo "scale=0;$aa*1024*0.9"|bc > 3.txt
+echo "scale=0;$aa*1024"|bc > 3.txt
 awk '{print int($1+0.5)}' 3.txt > 4.txt
 bb=`cat 4.txt`
 echo "scale=0;$bb/4096"|bc > 5.txt
